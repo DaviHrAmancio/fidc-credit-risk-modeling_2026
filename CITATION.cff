@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "Se usar este repositório, cite-o como abaixo."
+title: "Risco de crédito em FIDCs de duplicatas: CreditRisk+, cópulas e estrutura de subordinação"
+type: software
+version: 0.1.0
+date-released: 2026-10-03
+authors:
+  - family-names: "Amâncio"
+    given-names: "Davi Henrique de Souza"
+    affiliation: "Instituto Federal Catarinense (IFC), Campus Camboriú"
+repository-code: "https://github.com/DaviHrAmancio/fidc-creditrisk-modelagem"
+keywords:
+  - FIDC
+  - CreditRisk+
+  - risco de crédito
+  - duplicatas
+  - subordinação
+  - Monte Carlo
