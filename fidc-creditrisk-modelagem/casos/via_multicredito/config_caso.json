@@ -1,0 +1,54 @@
+{
+  "caso": "via_multicredito",
+  "natureza": "OBSERVADO (fonte externa) + SIMULADO (ponte com o modelo). Ver PROVENIENCIA.md",
+  "fundo": {
+    "nome": "FIC FIDC VIA MULTICREDITO",
+    "cnpj": "22.175.345/0001-19",
+    "tipo": "FIC de FIDC (fundo que investe em cotas de outros FIDCs)",
+    "condominio": "Aberto (D+29), prazo indeterminado",
+    "data_registro_cvm": "2015-06-29",
+    "administradora": "BTG Pactual Serviços Financeiros S.A. DTVM (cabeçalho do relatório; ver nota de inconsistência em PROVENIENCIA.md)",
+    "gestora": "Titan Capital Gestão de Recursos Ltda.",
+    "custodiante": "Banco BTG Pactual S.A.",
+    "classes": ["senior", "mezanino", "junior"]
+  },
+  "fonte": {
+    "tipo": "relatorio_de_monitoramento_de_rating",
+    "emissor": "Austin Rating",
+    "data_relatorio": "2024-08-09",
+    "url": "https://www.austin.com.br/Relatorio/Rating/FIC_FIDC_Via_Multicr%C3%A9dito/11037",
+    "janela": "2023-07 a 2024-06 (12 competências)",
+    "dado_de_origem_citado_pela_fonte": "BTG Pactual Serviços Financeiros S.A. (tabelas de PL e rentabilidade)",
+    "defasagem": "o dado mais recente é jun/2024; NÃO representa a situação atual do fundo"
+  },
+  "criterios_de_selecao": {
+    "pl": "PL por classe e total (R$ mil, fim do mês)",
+    "rentabilidade_12m": "retorno acumulado composto de jul/2023 a jun/2024, por classe e CDI",
+    "rentabilidade_ultimo_mes": "retorno de jun/2024, por classe",
+    "classes_subordinadas_visiveis": "sim: PL e retorno de mezanino e júnior separados",
+    "cotas_seniores_para_varejo": "NAO VERIFICADO: a fonte informa 770 cotistas na sênior, sem perfil (PF/PJ/fundo)",
+    "titular_das_subordinadas": "NAO PUBLICO NO RELATORIO: só a contagem (660 cotistas de mezanino+júnior); a identidade consta no regulamento/informe da CVM por tipo de cotista"
+  },
+  "regulamento_citado_pela_fonte": {
+    "subordinacao_minima_pct_pl": 0.20,
+    "junior_minima_pct_pl": 0.10,
+    "benchmark_senior": "CDI + 2,5% a.a.",
+    "benchmark_mezanino": "CDI + 3,5% a.a.",
+    "referencia_regulamento": "2022-02-23"
+  },
+  "cotistas_jun_2024": {"senior": 770, "subordinadas_mezanino_mais_junior": 660},
+  "ratings_austin_2T24": {"senior": "brBBB+(sf)", "mezanino": "brB+(sf)", "junior": "brB-(sf)"},
+  "carteira_jun_2024_pct_pl": {
+    "cotas_de_fidcs": 0.973, "cotas_sub_mezanino_dos_fidcs": 0.639, "cotas_sub_junior_dos_fidcs": 0.183,
+    "cotas_senior_dos_fidcs": 0.150, "maior_fidc_investido": 0.753, "n_fidcs_investidos": 3
+  },
+  "modelo": {
+    "cenarios": ["base", "estresse"],
+    "pmf_arquivo": "outputs/pmf_crplus_{cenario}.csv",
+    "coluna_pmf": "pmf_gamma",
+    "unidade_perda": "R$ da carteira sintética de 600 sacados (face e PL em outputs/resumo_perdas.csv)",
+    "ciclos_por_ano": 6,
+    "usar_excesso_spread": false,
+    "ressalva": "A carteira simulada (duplicatas, 600 sacados, ciclo de 60 dias) NAO é a carteira dos FIDCs investidos pelo fundo; a ponte é ilustrativa"
+  }
+}

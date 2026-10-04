@@ -1,0 +1,23 @@
+{
+  "fundo": {
+    "nome": "PAN AUTO FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS RESPONSABILIDADE LIMITADA",
+    "cnpj": "65.473.848/0001-83",
+    "codigo_cvm": "226182",
+    "gestora": "BTG PACTUAL GESTORA DE INVESTIMENTOS ALTERNATIVOS LTDA.",
+    "administradora": "BTG PACTUAL SERVICOS FINANCEIROS S/A DTVM",
+    "inicio": "2026-03-18",
+    "fonte_cadastro": "https://fidcs.com.br/fundo/65473848000183 (agregador de dados da CVM; conferir na CVM)"
+  },
+  "competencias": ["202603", "202604"],
+  "status_regras": "PONTO DE PARTIDA NAO VALIDADO: confira cada regex contra data/cvm/schema_report.csv antes de usar qualquer numero. Regras com 'colunas' vazio ficam NaN de proposito.",
+  "regras": {
+    "pl": {"arquivo": "tab_IV", "colunas": ["TAB_IV_A_VL_PL$"]},
+    "carteira": {"arquivo": "tab_I", "colunas": ["TAB_I2_VL_CARTEIRA$"]},
+    "inadimplencia_total": {"arquivo": "tab_V", "colunas": []},
+    "pdd": {"arquivo": "tab_I", "colunas": []}
+  },
+  "razoes": {
+    "inadimplencia_pct_carteira": ["inadimplencia_total", "carteira"],
+    "pdd_pct_carteira": ["pdd", "carteira"]
+  }
+}

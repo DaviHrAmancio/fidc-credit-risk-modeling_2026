@@ -1,0 +1,13 @@
+cenario,modelo,leitura,subordinacao_minima
+base,crplus_poisson,com_xs,0.015
+base,crplus_poisson,sem_xs,0.035
+base,crplus_gamma,com_xs,0.015
+base,crplus_gamma,sem_xs,0.035
+base,copula_gaussiana,com_xs,0.015
+base,copula_gaussiana,sem_xs,0.035
+estresse,crplus_poisson,com_xs,0.04
+estresse,crplus_poisson,sem_xs,0.06
+estresse,crplus_gamma,com_xs,0.045
+estresse,crplus_gamma,sem_xs,0.07
+estresse,copula_gaussiana,com_xs,0.045
+estresse,copula_gaussiana,sem_xs,0.065

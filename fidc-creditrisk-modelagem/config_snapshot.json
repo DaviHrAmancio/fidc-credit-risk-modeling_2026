@@ -1,0 +1,57 @@
+{
+  "versao": "0.2.0",
+  "seed": 20261003,
+  "carteira": {
+    "n_sacados": 600,
+    "exposicao_mediana": 120000,
+    "exposicao_sigma_log": 0.9,
+    "exposicao_max": 1500000,
+    "ratings": {
+      "A": {"peso": 0.35, "pd_anual": 0.006},
+      "B": {"peso": 0.35, "pd_anual": 0.018},
+      "C": {"peso": 0.20, "pd_anual": 0.045},
+      "D": {"peso": 0.10, "pd_anual": 0.100}
+    },
+    "setores": [
+      {"nome": "Varejo", "peso": 0.30, "sigma": 0.8},
+      {"nome": "Industria", "peso": 0.30, "sigma": 0.7},
+      {"nome": "Agro", "peso": 0.20, "sigma": 1.0},
+      {"nome": "Servicos", "peso": 0.20, "sigma": 0.6}
+    ],
+    "lgd": 0.60
+  },
+  "horizonte": {"dias": 60, "dias_ano": 360},
+  "precificacao": {"desconto_mensal": 0.025, "prazo_dias": 60},
+  "estrutura": {
+    "cdi_anual": 0.14,
+    "spread_senior_anual": 0.03,
+    "despesas_anuais": 0.02,
+    "cota_subordinada": 0.20
+  },
+  "panjer": {"unidade": 10000, "tol_massa": 1e-10, "n_max_teto": 60000},
+  "monte_carlo": {"n_sims": 100000, "n_sims_rapido": 10000, "chunk": 2000},
+  "copula": {"t_graus_liberdade": 5},
+  "subordinacao": {
+    "alvo_el_senior_ciclo": 0.0001,
+    "grade_min": 0.0,
+    "grade_max": 0.5,
+    "grade_passo": 0.005,
+    "multiplos_el": [3, 4, 5]
+  },
+  "quantis": [0.95, 0.99, 0.999],
+  "cenarios": {
+    "base": {"mult_pd": 1.0, "mult_sigma": 1.0},
+    "estresse": {"mult_pd": 3.0, "mult_sigma": 1.5}
+  },
+  "lgd": {
+    "grade": [0.40, 0.50, 0.60, 0.70, 0.80],
+    "beta_desvios": [0.15, 0.25],
+    "economico": {"taxa_recuperacao": 0.50, "lag_dias": 240, "taxa_desconto_anual": 0.14, "custo_cobranca": 0.15}
+  },
+  "sensibilidade_nu": {"graus_liberdade": [5, 10, 30, 100]},
+  "lote": {
+    "retorno_alvo_sub_anual": 0.30,
+    "margem_alvo_anual": 0.02,
+    "alvo_el_senior_ciclo": 0.0001
+  }
+}

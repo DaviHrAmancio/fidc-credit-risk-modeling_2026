@@ -1,0 +1,15 @@
+{
+  "versao": "0.3.0",
+  "arquivo": "templates/duplicatas_exemplo.csv",
+  "sha256_entrada": "c73c4fcfbd3e9523d707fc5e76ee8943246a000da59a1c9dac6b943b66eb7ec4",
+  "sha256_config": "287ef87ecb80198455e03ffd6d0c5ab740f5ead951dcf0aaf05cb3d522858d8d",
+  "seed": 20261003,
+  "n_sims": 50000,
+  "cenarios": [
+    "base",
+    "estresse"
+  ],
+  "python": "3.12.3",
+  "numpy": "2.4.4",
+  "pandas": "3.0.2"
+}

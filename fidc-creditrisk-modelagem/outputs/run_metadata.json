@@ -1,0 +1,11 @@
+{
+  "versao": "0.3.0",
+  "config_sha256": "287ef87ecb80198455e03ffd6d0c5ab740f5ead951dcf0aaf05cb3d522858d8d",
+  "seed": 20261003,
+  "rapido": false,
+  "n_sims": 100000,
+  "python": "3.12.3",
+  "numpy": "2.4.4",
+  "scipy": "1.17.1",
+  "pandas": "3.0.2"
+}

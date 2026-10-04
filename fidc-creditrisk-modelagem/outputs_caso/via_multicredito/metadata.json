@@ -1,0 +1,13 @@
+{
+  "versao": "0.3.0",
+  "caso": "via_multicredito",
+  "config_sha256": "58db7fb26320b4b8ae2ea3336ed9ed3215aaf3c8e99aad3c0ebb768b6136f0cc",
+  "dados_sha256": "a2804f4de8d1fbd111d1857040949001e82b218108aec6ce132bc508fefe55b9",
+  "pmf_sha256": {
+    "base": "3276046d8214f21a85d41f1670f33d2f0e7e18475b84dfd8c63e08e24956bd63",
+    "estresse": "2a8c052e5dc3d05355751ef64fc59001e48be6540e6c19063778737b603bf3a7"
+  },
+  "python": "3.12.3",
+  "numpy": "2.4.4",
+  "pandas": "3.0.2"
+}

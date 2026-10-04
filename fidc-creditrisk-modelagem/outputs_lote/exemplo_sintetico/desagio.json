@@ -1,0 +1,26 @@
+{
+  "base": {
+    "custo_senior": 0.020852059409513048,
+    "retorno_sub": 0.008787284117949401,
+    "despesas": 0.0032507026963728425,
+    "perda_esperada": 0.002086847887120402,
+    "margem": 0.0032507026963728425,
+    "desagio_exigido_ciclo": 0.03822759680732853,
+    "desagio_praticado_ciclo": 0.049284305410310925,
+    "taxa_mensal_exigida": 0.019258535189506487,
+    "taxa_mensal_praticada": 0.02476350234028657,
+    "folga_ciclo": 0.011056708602982392
+  },
+  "estresse": {
+    "custo_senior": 0.020852059409513048,
+    "retorno_sub": 0.008787284117949401,
+    "despesas": 0.0032507026963728425,
+    "perda_esperada": 0.006511704261753805,
+    "margem": 0.0032507026963728425,
+    "desagio_exigido_ciclo": 0.04265245318196194,
+    "desagio_praticado_ciclo": 0.049284305410310925,
+    "taxa_mensal_exigida": 0.021465045917985703,
+    "taxa_mensal_praticada": 0.02476350234028657,
+    "folga_ciclo": 0.006631852228348986
+  }
+}

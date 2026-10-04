@@ -1,0 +1,25 @@
+{
+  "caso": "NOME_DO_CASO",
+  "natureza": "OBSERVADO (fonte externa) + SIMULADO (ponte com o modelo)",
+  "fundo": {
+    "nome": "PREENCHER", "cnpj": "00.000.000/0001-00", "tipo": "FIDC | FIC FIDC",
+    "condominio": "aberto | fechado", "administradora": "PREENCHER", "gestora": "PREENCHER",
+    "custodiante": "PREENCHER", "classes": ["senior", "mezanino", "junior"]
+  },
+  "fonte": {
+    "tipo": "informe_mensal_cvm | relatorio_de_rating | outro", "emissor": "PREENCHER",
+    "data_relatorio": "AAAA-MM-DD", "url": "PREENCHER", "janela": "AAAA-MM a AAAA-MM (12 competências)",
+    "defasagem": "descreva a defasagem do dado"
+  },
+  "criterios_de_selecao": {
+    "pl": "PL por classe e total", "rentabilidade_12m": "acumulado composto 12M por classe",
+    "rentabilidade_ultimo_mes": "retorno do último mês por classe",
+    "cotas_seniores_para_varejo": "verificado | NAO VERIFICADO (cite a fonte)",
+    "titular_das_subordinadas": "o que a fonte permite afirmar (tipo de cotista, não nome)"
+  },
+  "modelo": {
+    "cenarios": ["base", "estresse"], "pmf_arquivo": "outputs/pmf_crplus_{cenario}.csv",
+    "coluna_pmf": "pmf_gamma", "ciclos_por_ano": 6, "usar_excesso_spread": false,
+    "ressalva": "descreva por que a carteira simulada não é a do fundo"
+  }
+}
