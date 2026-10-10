@@ -1,0 +1,7 @@
+mes,desagio_am,prazo_medio_dias,vop_var_mm,fonte_id,observacao
+2025-09,0.0300,,,madeira_total_2026-06-11,"Início da série. Só o deságio é publicado."
+2026-04,0.0275,50.89,,madeira_total_2026-06-11,"Seis quedas mensais consecutivas até aqui, segundo a matéria."
+2026-05,0.0277,50.44,0.0104,madeira_total_2026-06-11,"VOP: variação mensal, não nível."
+2026-07,,46.50,0.0090,fidcnews_2026-10-07,"Menor prazo da série. Deságio de julho não publicado nas matérias lidas."
+2026-08,0.0274,49.20,0.0290,fidcnews_2026-10-07,
+2026-09,0.0292,50.80,-0.0280,fidcnews_2026-10-07,"Maior alta mensal da série (+0,18 p.p.); maior nível desde dez/2025."

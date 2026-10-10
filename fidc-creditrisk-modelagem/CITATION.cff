@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "Se usar este repositório, cite-o como abaixo."
 title: "Risco de crédito em FIDCs de duplicatas: CreditRisk+, cópulas e estrutura de subordinação"
 type: software
-version: 0.3.0
-date-released: 2026-10-03
+version: 0.2.0
+date-released: 2026-10-09
 authors:
   - family-names: "Amâncio"
     given-names: "Davi Henrique de Souza"

@@ -20,10 +20,22 @@
     ],
     "lgd": 0.60
   },
-  "horizonte": {"dias": 60, "dias_ano": 360},
-  "precificacao": {"desconto_mensal": 0.025, "prazo_dias": 60},
+  "horizonte": {"dias": 50.8, "dias_ano": 360},
+  "precificacao": {
+    "desconto_mensal": 0.0292,
+    "prazo_dias": 50.8,
+    "origem": "Quick Soft, setembro/2026 (ver data/mercado_quicksoft.csv)"
+  },
+  "mercado": {
+    "serie": "data/mercado_quicksoft.csv",
+    "macro": "data/contexto_macro.csv",
+    "fontes": "data/fontes_mercado.csv",
+    "mes_referencia": "2026-09",
+    "selic_meta_anual": 0.1375,
+    "cdi_menos_selic_meta": -0.001
+  },
   "estrutura": {
-    "cdi_anual": 0.14,
+    "cdi_anual": 0.1365,
     "spread_senior_anual": 0.03,
     "despesas_anuais": 0.02,
     "cota_subordinada": 0.20
@@ -42,16 +54,5 @@
   "cenarios": {
     "base": {"mult_pd": 1.0, "mult_sigma": 1.0},
     "estresse": {"mult_pd": 3.0, "mult_sigma": 1.5}
-  },
-  "lgd": {
-    "grade": [0.40, 0.50, 0.60, 0.70, 0.80],
-    "beta_desvios": [0.15, 0.25],
-    "economico": {"taxa_recuperacao": 0.50, "lag_dias": 240, "taxa_desconto_anual": 0.14, "custo_cobranca": 0.15}
-  },
-  "sensibilidade_nu": {"graus_liberdade": [5, 10, 30, 100]},
-  "lote": {
-    "retorno_alvo_sub_anual": 0.30,
-    "margem_alvo_anual": 0.02,
-    "alvo_el_senior_ciclo": 0.0001
   }
 }

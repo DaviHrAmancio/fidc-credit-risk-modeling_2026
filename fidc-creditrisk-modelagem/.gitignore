@@ -5,10 +5,3 @@ __pycache__/
 venv/
 .DS_Store
 *.egg-info/
-
-# dados baixados da CVM (grandes e reproduzíveis com scripts/baixar_cvm.py)
-data/
-
-# análises de lotes reais do usuário (só o exemplo sintético é versionado)
-outputs_lote/*
-!outputs_lote/exemplo_sintetico/

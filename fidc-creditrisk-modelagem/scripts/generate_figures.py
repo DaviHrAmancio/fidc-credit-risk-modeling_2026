@@ -104,60 +104,6 @@ def fig_validacao(cen: str) -> None:
     plt.close(fig)
 
 
-def fig_lgd(cen: str, face: float) -> None:
-    d = pd.read_csv(OUT / "lgd_sensibilidade.csv")
-    d = d[d["cenario"] == cen]
-    det = d[(d["modelo"] == "crplus_gamma") & (d["lgd_desvio"] == 0)].sort_values("lgd_media")
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.2))
-    ax = axes[0]
-    ax.plot(100 * det["lgd_media"], 100 * det["var_0.999"] / face, "o-", color=CORES["crplus_gamma"],
-            label="VaR 99,9% (Panjer)")
-    ax.plot(100 * det["lgd_media"], 100 * det["el"] / face, "s-", color="#444", label="EL")
-    ax.set_xlabel("LGD determinística (%)")
-    ax.set_ylabel("Perda do ciclo (% da face)")
-    ax.set_title("EL e cauda são lineares na LGD")
-    ax.grid(alpha=0.3)
-    ax.legend(frameon=False)
-    ax = axes[1]
-    for m, off in (("mc_crplus_gamma", -0.004), ("copula_gaussiana", 0.004)):
-        g = d[d["modelo"] == m].sort_values("lgd_desvio")
-        ax.plot(100 * g["lgd_desvio"], 100 * g["var_0.999"] / face, "o-", color=CORES[m], label=ROTULOS[m])
-    ax.set_xlabel("Desvio-padrão da LGD Beta (pontos percentuais; média 60%)")
-    ax.set_ylabel("VaR 99,9% (% da face) — eixo ampliado")
-    ax.set_title("Incerteza de recuperação engorda a cauda")
-    ax.grid(alpha=0.3)
-    ax.legend(frameon=False, fontsize=8)
-    fig.suptitle(f"Sensibilidade à LGD — cenário {cen}", y=1.0)
-    fig.tight_layout()
-    fig.savefig(FIG / f"fig_lgd_{cen}.png", dpi=160)
-    plt.close(fig)
-
-
-def fig_nu(cen: str, face: float) -> None:
-    t = pd.read_csv(OUT / "t_sensibilidade_nu.csv")
-    t = t[t["cenario"] == cen].sort_values("nu")
-    r = pd.read_csv(OUT / "resumo_perdas.csv")
-    r = r[r["cenario"] == cen].set_index("modelo")
-    c = pd.read_csv(OUT / "t_calibracao_nu.csv")
-    c = c[c["cenario"] == cen].groupby("nu")["viavel"].all()
-    fig, ax = plt.subplots(figsize=(7.5, 4.6))
-    ax.plot(t["nu"], 100 * t["var_0.999"] / face, "o-", color=CORES["copula_t"], label="Cópula t (rho da gaussiana)")
-    for m in ("copula_gaussiana", "crplus_gamma"):
-        ax.axhline(100 * r.loc[m, "var_0.999"] / face, color=CORES[m], ls="--", label=ROTULOS[m])
-    for nu, y in zip(t["nu"], 100 * t["var_0.999"] / face):
-        ax.annotate("calibrável" if c.get(nu, False) else "não calibrável", (nu, y), textcoords="offset points",
-                    xytext=(6, 6), fontsize=7)
-    ax.set_xscale("log")
-    ax.set_xlabel("Graus de liberdade ν")
-    ax.set_ylabel("VaR 99,9% (% da face)")
-    ax.set_title(f"Cauda × hipótese de dependência de cauda — cenário {cen}")
-    ax.grid(alpha=0.3)
-    ax.legend(frameon=False, fontsize=8)
-    fig.tight_layout()
-    fig.savefig(FIG / f"fig_nu_{cen}.png", dpi=160)
-    plt.close(fig)
-
-
 def main() -> None:
     resumo = pd.read_csv(OUT / "resumo_perdas.csv")
     for cen in resumo["cenario"].unique():
@@ -165,8 +111,6 @@ def main() -> None:
         fig_cauda(cen, face)
         fig_subordinacao(cen)
         fig_validacao(cen)
-        fig_lgd(cen, face)
-        fig_nu(cen, face)
     print("Figuras salvas em", FIG)
 
 

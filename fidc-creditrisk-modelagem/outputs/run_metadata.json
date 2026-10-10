@@ -1,11 +1,16 @@
 {
-  "versao": "0.3.0",
-  "config_sha256": "287ef87ecb80198455e03ffd6d0c5ab740f5ead951dcf0aaf05cb3d522858d8d",
+  "versao": "0.2.0",
+  "config_sha256": "6af2e60b41645b7cc98d37a245b291526efb4e339d85b769f2047a10a334369b",
+  "dados_sha256": {
+    "contexto_macro.csv": "77b3d1610535524a1173feaad2a3fe25a937692124e91cb9cc29205c76d252f0",
+    "fontes_mercado.csv": "efeafab960e88d62e01eb97ec81edc9d2f637bb2ef7e82ce4200823a18dd9abb",
+    "mercado_quicksoft.csv": "07366d76413e33932de11c477debb1e8031e8684f1eba213eee99153ac6a1734"
+  },
   "seed": 20261003,
   "rapido": false,
   "n_sims": 100000,
-  "python": "3.12.3",
-  "numpy": "2.4.4",
-  "scipy": "1.17.1",
-  "pandas": "3.0.2"
+  "python": "3.13.16",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.5"
 }

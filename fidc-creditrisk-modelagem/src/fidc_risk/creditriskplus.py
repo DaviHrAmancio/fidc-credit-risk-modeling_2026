@@ -95,14 +95,8 @@ def pmf_perda(v, lam, setor_idx, sigmas2, unidade: float,
 
 
 def simular_crplus(v, lam, setor_idx, sigmas2, unidade: float, n_sims: int,
-                   rng: np.random.Generator, chunk: int = 2000, mult_sev=None) -> np.ndarray:
-    """Monte Carlo do MESMO modelo (Gamma-Poisson) para validar a recursão de Panjer.
-
-    Com ``mult_sev`` (ver ``lgd.sorteador_beta``) a severidade de cada sacado é multiplicada
-    por um sorteio de média 1 (LGD aleatória); um único sorteio por (simulação, sacado), o
-    que é exato quando o sacado tem no máximo um default no ciclo (caso de P(N>=2) desprezível).
-    Sem ``mult_sev`` o resultado é idêntico ao da versão 0.1.0.
-    """
+                   rng: np.random.Generator, chunk: int = 2000) -> np.ndarray:
+    """Monte Carlo do MESMO modelo (Gamma-Poisson) para validar a recursão de Panjer."""
     v = np.asarray(v)
     lam = np.asarray(lam)
     setor_idx = np.asarray(setor_idx)
@@ -116,9 +110,5 @@ def simular_crplus(v, lam, setor_idx, sigmas2, unidade: float, n_sims: int,
             if s2 > 0.0:
                 g[:, k] = rng.gamma(shape=1.0 / s2, scale=s2, size=m)
         contagem = rng.poisson(g[:, setor_idx] * lam)
-        if mult_sev is not None:
-            contagem = contagem.astype(float)
-            lin, col = np.nonzero(contagem)          # sorteia LGD só onde houve default
-            contagem[lin, col] *= mult_sev(rng, (len(lin),))
         out[ini:ini + m] = contagem @ sev
     return out

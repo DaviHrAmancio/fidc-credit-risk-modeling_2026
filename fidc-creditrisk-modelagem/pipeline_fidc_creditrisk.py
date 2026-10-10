@@ -23,10 +23,11 @@ RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ / "src"))
 
 from fidc_risk import __version__  # noqa: E402
-from fidc_risk.copula import calibrar_rho, calibrar_rho_t, simular_copula  # noqa: E402
-from fidc_risk.lgd import lgd_economico, sorteador_beta  # noqa: E402
+from fidc_risk.copula import calibrar_rho, simular_copula  # noqa: E402
 from fidc_risk.creditriskplus import (bandas, momentos_analiticos, pmf_perda,  # noqa: E402
                                       simular_crplus)
+from fidc_risk.mercado import (carregar_serie, decompor, el_pct_pl,  # noqa: E402
+                               fator_face_sobre_preco, pd_anual_equilibrio)
 from fidc_risk.metrics import curva_quantis, resumo_distribuicao  # noqa: E402
 from fidc_risk.portfolio import aplicar_cenario, gerar_carteira, sigmas2_setores  # noqa: E402
 from fidc_risk.waterfall import (Estrutura, curva_subordinacao,  # noqa: E402
@@ -64,91 +65,92 @@ def convergencia(amostra: np.ndarray, el_analitica: float) -> tuple[pd.DataFrame
     return df, inclinacao
 
 
-def _min_sub(vals, probs, est, grade, alvo):
-    """Subordinação mínima com e sem excesso de spread para uma distribuição de perdas."""
-    out = {}
-    for usar_xs, nome in ((True, "com_xs"), (False, "sem_xs")):
-        cv = curva_subordinacao(vals, probs, est, grade, usar_xs)
-        out[nome] = menor_subordinacao(cv, alvo)
-    return out
+ROTULO_MODELO = {"crplus_poisson": "CreditRisk+ Poisson", "crplus_gamma": "CreditRisk+ Gamma (setores)",
+                 "copula_gaussiana": "Cópula gaussiana", "copula_t": "Cópula t (ν = 5)"}
+MODELOS_TABELA = list(ROTULO_MODELO)
 
 
-def _linha(cen, modelo, vals, probs, quantis, est, grade, alvo, **extra):
-    r = resumo_distribuicao(vals, probs, quantis)
-    ms = _min_sub(vals, probs, est, grade, alvo)
-    r.update({"cenario": cen, "modelo": modelo, "sub_min_com_xs": ms["com_xs"],
-              "sub_min_sem_xs": ms["sem_xs"]})
-    r.update(extra)
-    return r
+def pct(x: float, casas: int = 2) -> str:
+    return f"{100 * x:.{casas}f}".replace(".", ",")
 
 
-def bloco_lgd(df, cfg, cen, i_cen, s2, est, calib, am_cr_det, am_g_det, args):
-    """Sensibilidade da cauda e da subordinação à LGD (determinística e Beta).
+def efeito_taxa_prazo(serie_ok: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """Decompõe a variação da capacidade de perda ANUALIZADA entre meses consecutivos em efeito de
+    taxa (deságio a.m.), efeito de prazo e interação. Independe da EL (e do cenário)."""
+    e, dias_ano = cfg["estrutura"], cfg["horizonte"]["dias_ano"]
 
-    * LGD determinística: refaz bandas e recursão de Panjer (CreditRisk+ Gamma) para cada LGD.
-    * LGD Beta (média = LGD da config): Monte Carlo do CreditRisk+ Gamma e da cópula gaussiana
-      com sorteio de LGD por default; a linha de desvio 0 reaproveita o Monte Carlo principal.
-    """
-    (unidade, tol, teto, n_sims, chunk, quantis, grade, alvo, seed, nu) = args
-    setor = df["setor_idx"].to_numpy()
-    pdh = df["pd_horizonte"].to_numpy()
-    face = df["face"].to_numpy()
-    lgd0 = float(cfg["carteira"]["lgd"])
+    def cap_anual(d: float, h: float) -> float:
+        r = decompor(d, h, 0.0, e["cdi_anual"], e["spread_senior_anual"], e["despesas_anuais"],
+                     e["cota_subordinada"], dias_ano)
+        return r["capacidade_perda_anual"]
+
     linhas = []
-    for lgd in cfg["lgd"]["grade"]:
-        v, lam = bandas(face * lgd, pdh, unidade)
-        pmf = pmf_perda(v, lam, setor, s2, unidade, tol, teto)
-        vals = np.arange(len(pmf)) * unidade
-        linhas.append(_linha(cen, "crplus_gamma", vals, pmf, quantis, est, grade, alvo,
-                             lgd_media=lgd, lgd_desvio=0.0, metodo="panjer"))
-    v0, lam0 = bandas(face * lgd0, pdh, unidade)
-    unif = np.full(n_sims, 1.0 / n_sims)
-    linhas.append(_linha(cen, "mc_crplus_gamma", am_cr_det, unif, quantis, est, grade, alvo,
-                         lgd_media=lgd0, lgd_desvio=0.0, metodo="mc"))
-    linhas.append(_linha(cen, "copula_gaussiana", am_g_det, unif, quantis, est, grade, alvo,
-                         lgd_media=lgd0, lgd_desvio=0.0, metodo="mc"))
-    for j, sd in enumerate(cfg["lgd"]["beta_desvios"], start=1):
-        mult = sorteador_beta(lgd0, float(sd))
-        am1 = simular_crplus(v0, lam0, setor, s2, unidade, n_sims,
-                             np.random.default_rng([seed, i_cen, 20 + j, 1]), chunk, mult_sev=mult)
-        am2 = simular_copula(pdh, face * lgd0, setor, calib, n_sims,
-                             np.random.default_rng([seed, i_cen, 20 + j, 2]), "gaussiana", nu, chunk,
-                             mult_sev=mult)
-        for nome, am in (("mc_crplus_gamma", am1), ("copula_gaussiana", am2)):
-            linhas.append(_linha(cen, nome, am, unif, quantis, est, grade, alvo,
-                                 lgd_media=lgd0, lgd_desvio=float(sd), metodo="mc",
-                                 el_erro_padrao=float(am.std(ddof=1) / np.sqrt(n_sims))))
-    return linhas
+    s = serie_ok.sort_values("mes").reset_index(drop=True)
+    for i in range(1, len(s)):
+        a, b = s.iloc[i - 1], s.iloc[i]
+        if (pd.Period(b["mes"]) - pd.Period(a["mes"])).n != 1:
+            continue
+        d0, h0, d1, h1 = a["desagio_am"], a["prazo_medio_dias"], b["desagio_am"], b["prazo_medio_dias"]
+        total = cap_anual(d1, h1) - cap_anual(d0, h0)
+        taxa = cap_anual(d1, h0) - cap_anual(d0, h0)
+        prazo = cap_anual(d0, h1) - cap_anual(d0, h0)
+        linhas.append({"de": a["mes"], "para": b["mes"], "desagio_de": d0, "desagio_para": d1,
+                       "prazo_de": h0, "prazo_para": h1,
+                       "delta_capacidade_anual": total, "efeito_taxa": taxa,
+                       "efeito_prazo": prazo, "interacao": total - taxa - prazo})
+    return pd.DataFrame(linhas)
 
 
-def bloco_nu(df, cfg, cen, i_cen, s2, est, calib, am_t_main, args):
-    """Sensibilidade à hipótese de cauda: cópula t com vários graus de liberdade.
+def gerar_tabelas(resumo: pd.DataFrame, chave: dict, decomp: pd.DataFrame, mes_ref: str,
+                  efeito: pd.DataFrame) -> dict:
+    """Tabelas em markdown usadas no README (verify_output confere que o README as contém)."""
+    t = {}
+    linhas = ["| Cenário | Modelo | EL | VaR 99% | VaR 99,9% | ES 99,9% |", "|---|---|---|---|---|---|"]
+    for cen in chave:
+        for m in MODELOS_TABELA:
+            r = resumo[(resumo["cenario"] == cen) & (resumo["modelo"] == m)].iloc[0]
+            f = r["face_total"]
+            linhas.append(f"| {cen} | {ROTULO_MODELO[m]} | {pct(r['el'] / f, 3)} | {pct(r['var_0.99'] / f)} "
+                          f"| {pct(r['var_0.999'] / f)} | {pct(r['es_0.999'] / f)} |")
+    t["tabela_perdas"] = "\n".join(linhas)
 
-    Mantém o ``rho`` de ativos calibrado na cópula gaussiana (como em ``copula_t``) e registra,
-    para cada setor, se seria POSSÍVEL casar a correlação de default do CreditRisk+ com a
-    cópula t (``calibrar_rho_t``): como o fator W é comum, há um piso de correlação em rho = 0.
-    """
-    (unidade, tol, teto, n_sims, chunk, quantis, grade, alvo, seed, nu_main) = args
-    setor = df["setor_idx"].to_numpy()
-    pdh = df["pd_horizonte"].to_numpy()
-    perda_dd = df["perda_dado_default"].to_numpy()
-    unif = np.full(n_sims, 1.0 / n_sims)
-    cal, res = [], []
-    for j, nu in enumerate(cfg["sensibilidade_nu"]["graus_liberdade"], start=1):
-        for k, sec in enumerate(cfg["carteira"]["setores"]):
-            p_med = float(pdh[setor == k].mean())
-            rho_t, viavel, piso = calibrar_rho_t(p_med, float(s2[k]), float(nu))
-            cal.append({"cenario": cen, "nu": nu, "setor": sec["nome"], "pd_media_ciclo": p_med,
-                        "corr_default_alvo": p_med * s2[k] / (1 - p_med),
-                        "piso_corr_default_t": piso, "viavel": viavel, "rho_t": rho_t,
-                        "rho_gaussiana": float(calib[k])})
-        if float(nu) == nu_main:
-            am = am_t_main
-        else:
-            am = simular_copula(pdh, perda_dd, setor, calib, n_sims,
-                                np.random.default_rng([seed, i_cen, 40 + j]), "t", float(nu), chunk)
-        res.append(_linha(cen, f"copula_t_nu{nu}", am, unif, quantis, est, grade, alvo, nu=nu))
-    return cal, res
+    linhas = ["| Cenário | Modelo | com excesso de spread | sem excesso de spread |", "|---|---|---|---|"]
+    for cen, r in chave.items():
+        for m in MODELOS_TABELA:
+            a = r["subordinacao_minima"][f"{m}|com_xs"]
+            b = r["subordinacao_minima"][f"{m}|sem_xs"]
+            linhas.append(f"| {cen} | {ROTULO_MODELO[m]} | {pct(a, 1)}% | {pct(b, 1)}% |")
+    t["tabela_subordinacao"] = "\n".join(linhas)
+
+    linhas = ["| Cenário | Mês | Deságio a.m. | Prazo (dias) | Receita de deságio | Funding sênior | Custos "
+              "| **Capacidade de perda** | EL do modelo | Margem residual | EL / capacidade |",
+              "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for _, d in decomp.iterrows():
+        linhas.append(f"| {d['cenario']} | {d['mes']} | {pct(d['desagio_am'])}% | {d['prazo_medio_dias']:.2f}".replace(".", ",")
+                      + f" | {pct(d['receita_desagio_ciclo'])}% | {pct(d['funding_senior_ciclo'])}% "
+                        f"| {pct(d['custos_ciclo'])}% | **{pct(d['capacidade_perda_ciclo'])}%** "
+                        f"| {pct(d['el_ciclo'])}% | {pct(d['margem_residual_ciclo'])}% "
+                        f"| {pct(d['el_sobre_capacidade'], 1)}% |")
+    t["tabela_decomposicao"] = "\n".join(linhas)
+
+    ref = decomp[decomp["mes"] == mes_ref]
+    linhas = ["| Cenário | Capacidade de perda por ano (% do PL) | EL do modelo por ano (% do PL) "
+              "| PD anual de equilíbrio (homogênea) | PD anual média da carteira |", "|---|---|---|---|---|"]
+    for _, d in ref.iterrows():
+        linhas.append(f"| {d['cenario']} | {pct(d['capacidade_perda_anual'], 1)}% | {pct(d['el_anual'], 1)}% "
+                      f"| {pct(d['pd_anual_equilibrio'], 1)}% | {pct(d['pd_anual_media_carteira'], 1)}% |")
+    t["tabela_equilibrio"] = "\n".join(linhas)
+
+    linhas = ["| Variação | Deságio a.m. | Prazo (dias) | Δ capacidade de perda anual (p.p. do PL) "
+              "| efeito da taxa | efeito do prazo | interação |", "|---|---|---|---|---|---|---|"]
+    for _, d in efeito.iterrows():
+        pp = lambda x: ("0,00" if abs(round(100 * x, 2)) == 0 else f"{100 * x:+.2f}".replace(".", ","))  # noqa: E731
+        linhas.append(f"| {d['de']} → {d['para']} | {pct(d['desagio_de'])}% → {pct(d['desagio_para'])}% "
+                      f"| {d['prazo_de']:.2f} → {d['prazo_para']:.2f}".replace(".", ",")
+                      + f" | {pp(d['delta_capacidade_anual'])} | {pp(d['efeito_taxa'])} "
+                        f"| {pp(d['efeito_prazo'])} | {pp(d['interacao'])} |")
+    t["tabela_efeito_taxa_prazo"] = "\n".join(linhas)
+    return t
 
 
 def executar(cfg: dict, cfg_hash: str, rapido: bool, saida: Path) -> dict:
@@ -170,8 +172,11 @@ def executar(cfg: dict, cfg_hash: str, rapido: bool, saida: Path) -> dict:
     base = gerar_carteira(cfg, np.random.default_rng([seed, 0]))
 
     resumos, tranches, curvas, calibracoes, convs, quant_curvas = [], [], [], [], [], []
-    regras, chave = [], {}
-    lgd_linhas, nu_cal, nu_res = [], [], []
+    regras, chave, decomp = [], {}, []
+    serie = carregar_serie(RAIZ / cfg["mercado"]["serie"])
+    serie_ok = serie.dropna(subset=["desagio_am", "prazo_medio_dias"])
+    est_cfg = cfg["estrutura"]
+    lgd = float(cfg["carteira"]["lgd"])
 
     for i_cen, (nome_cen, cen) in enumerate(cfg["cenarios"].items(), start=1):
         df = aplicar_cenario(base, cfg, cen)
@@ -250,23 +255,31 @@ def executar(cfg: dict, cfg_hash: str, rapido: bool, saida: Path) -> dict:
                 curvas.append(cv)
                 min_sub[(modelo, usar_xs)] = menor_subordinacao(cv, sub_cfg["alvo_el_senior_ciclo"])
 
-        # --- sensibilidades (v0.2.0): LGD e hipótese de cauda ----------------------------
-        args_blocos = (unidade, tol, teto, n_sims, chunk, quantis, grade,
-                       sub_cfg["alvo_el_senior_ciclo"], seed, nu)
-        lgd_linhas += bloco_lgd(df, cfg, nome_cen, i_cen, s2, est, calib, am_cr, am_g, args_blocos)
-        cal_nu, res_nu = bloco_nu(df, cfg, nome_cen, i_cen, s2, est, calib, am_t, args_blocos)
-        nu_cal += cal_nu
-        nu_res += res_nu
-
         # regra de múltiplos da EL (prática de mercado) vs. subordinação mínima do modelo
-        el_pct_pl = el_carteira / preco_total
+        el_sobre_pl = el_carteira / preco_total
         for k_mult in sub_cfg["multiplos_el"]:
             regras.append({"cenario": nome_cen, "multiplo": k_mult,
-                           "subordinacao_exigida_pct_pl": k_mult * el_pct_pl})
+                           "subordinacao_exigida_pct_pl": k_mult * el_sobre_pl})
 
         conv, incl = convergencia(am_cr, media_a)
         conv["cenario"] = nome_cen
         convs.append(conv)
+
+        # --- decomposição do deságio de mercado (Quick Soft) -------------------------------
+        pd_media = float((df["face"] * df["pd_anual"]).sum() / df["face"].sum())
+        for _, m in serie_ok.iterrows():
+            el_pl = el_pct_pl(df, m["desagio_am"], m["prazo_medio_dias"], lgd, h["dias_ano"])
+            d = decompor(m["desagio_am"], m["prazo_medio_dias"], el_pl, est_cfg["cdi_anual"],
+                         est_cfg["spread_senior_anual"], est_cfg["despesas_anuais"], share_base,
+                         h["dias_ano"])
+            d.update({"cenario": nome_cen, "mes": m["mes"], "desagio_am": float(m["desagio_am"]),
+                      "prazo_medio_dias": float(m["prazo_medio_dias"]),
+                      "pd_anual_media_carteira": pd_media,
+                      "pd_anual_equilibrio": pd_anual_equilibrio(
+                          d["capacidade_perda_ciclo"],
+                          fator_face_sobre_preco(m["desagio_am"], m["prazo_medio_dias"]),
+                          lgd, m["prazo_medio_dias"], h["dias_ano"])})
+            decomp.append(d)
 
         ks = ks_contra_pmf(am_cr, pmf_g, unidade)
         se_mc = float(am_cr.std(ddof=1) / np.sqrt(n_sims))
@@ -304,17 +317,25 @@ def executar(cfg: dict, cfg_hash: str, rapido: bool, saida: Path) -> dict:
     pd.concat(convs).to_csv(saida / "convergencia.csv", index=False)
     pd.DataFrame(quant_curvas).to_csv(saida / "curvas_quantis.csv", index=False)
     pd.DataFrame(regras).to_csv(saida / "regra_multiplos_el.csv", index=False)
-    pd.DataFrame(lgd_linhas).to_csv(saida / "lgd_sensibilidade.csv", index=False)
-    pd.DataFrame(nu_cal).to_csv(saida / "t_calibracao_nu.csv", index=False)
-    pd.DataFrame(nu_res).to_csv(saida / "t_sensibilidade_nu.csv", index=False)
-    ec = cfg["lgd"]["economico"]
-    chave["_lgd_economico"] = {**ec, "lgd_implicita": lgd_economico(
-        ec["taxa_recuperacao"], ec["lag_dias"], ec["taxa_desconto_anual"],
-        ec["custo_cobranca"], h["dias_ano"]), "lgd_config": cfg["carteira"]["lgd"]}
+    decomp_df = pd.DataFrame(decomp)
+    colunas = ["cenario", "mes", "desagio_am", "prazo_medio_dias"] + [
+        c for c in decomp_df.columns if c not in ("cenario", "mes", "desagio_am", "prazo_medio_dias")]
+    decomp_df = decomp_df[colunas]
+    decomp_df.to_csv(saida / "decomposicao_taxa.csv", index=False)
+    resumo_df = pd.DataFrame(resumos)
+    efeito_df = efeito_taxa_prazo(serie_ok, cfg)
+    efeito_df.to_csv(saida / "efeito_taxa_prazo.csv", index=False)
+    tabelas = gerar_tabelas(resumo_df, chave, decomp_df, cfg["mercado"]["mes_referencia"], efeito_df)
+    (saida / "tabelas_readme.md").write_text(
+        "\n\n".join(f"<!-- BEGIN:{k} -->\n{v}\n<!-- END:{k} -->" for k, v in tabelas.items()) + "\n",
+        encoding="utf-8")
     (saida / "resultados_chave.json").write_text(
         json.dumps(chave, indent=2, ensure_ascii=False), encoding="utf-8")
+    dados_hash = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in sorted((RAIZ / "data").glob("*.csv"))}
     (saida / "run_metadata.json").write_text(json.dumps({
-        "versao": __version__, "config_sha256": cfg_hash, "seed": seed, "rapido": rapido,
+        "versao": __version__, "config_sha256": cfg_hash, "dados_sha256": dados_hash,
+        "seed": seed, "rapido": rapido,
         "n_sims": n_sims, "python": platform.python_version(), "numpy": np.__version__,
         "scipy": scipy.__version__, "pandas": pd.__version__,
     }, indent=2), encoding="utf-8")
@@ -330,8 +351,6 @@ def main() -> None:
     cfg, h = carregar_config(Path(args.config))
     chave = executar(cfg, h, args.rapido, Path(args.saida))
     for nome, r in chave.items():
-        if nome.startswith("_"):
-            continue
         print(f"[{nome}] EL={r['el_pct_face']:.4%} da face | KS(Panjer,MC)={r['ks_panjer_vs_mc']:.4f} "
               f"| inclinação={r['inclinacao_convergencia']:.3f}")
     print("OK")

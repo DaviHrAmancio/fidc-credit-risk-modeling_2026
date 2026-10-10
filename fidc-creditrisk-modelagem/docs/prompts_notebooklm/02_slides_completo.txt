@@ -1,0 +1,19 @@
+Crie uma apresentação acadêmica em português do Brasil (14 slides, 16:9) para defesa do trabalho "Risco de crédito em FIDCs de duplicatas: CreditRisk+, cópulas e subordinação". Público: banca de Matemática e profissionais de mercado financeiro. Tom sóbrio, fundo claro, poucas palavras, um número em destaque por slide, títulos que afirmam a conclusão.
+
+Roteiro:
+1 Título e autor (Davi H. S. Amâncio, IFC Camboriú).
+2 Pergunta: quanto do deságio paga o risco e quanto sobra?
+3 Fluxo do FIDC de duplicatas: cedente -> fundo (compra com deságio) -> sacado paga a face.
+4 Dados de mercado (Quick Soft): deságio 2,92% a.m., prazo 50,8 dias; limites da fonte.
+5 Decomposição: receita = funding + custos + EL + margem (fórmula).
+6 Resultado: capacidade de perda de cerca de 21% do PL por ano contra EL modelada de 2,0% (base) e 6,3% (estresse).
+7 A alta de set/2026 veio da taxa, não do prazo.
+8 CreditRisk+ e recursão de Panjer (ideia, sem derivação longa).
+9 Cópulas gaussiana e t como comparativo.
+10 Cauda por modelo (VaR 99,9%): Poisson subestima de 9% a 35%.
+11 Subordinação mínima e regra de múltiplos da EL.
+12 Validação: Panjer x Monte Carlo e convergência n^-1/2.
+13 Limitações: carteira sintética, fonte única, sem diluição nem coobrigação.
+14 Próximos passos: calibração CVM, diluição, coobrigação, revolvência.
+
+Use apenas números presentes nas fontes e cite o arquivo no rodapé. Use as figuras fig_cauda_estresse.png, fig_subordinacao_estresse.png e fig_validacao_base.png nos slides 10, 11 e 12. Não chame a margem residual de lucro.
